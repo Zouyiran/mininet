@@ -228,6 +228,22 @@ class CLI( Cmd ):
         else:
             error( 'invalid number of args: iperf src dst\n' )
 
+    def do_iperfMulti(self, line ):
+        """Multi iperf TCP test between nodes"""
+        args = line.split()
+        if len(args) == 0:
+             self.mn.iperfMulti()
+        elif len(args) == 1:
+            period = args[ 0 ]
+            self.mn.iperfMulti(period)
+        elif len(args) == 2:
+            period= args[ 0 ]
+            port = args[ 1 ]
+            self.mn.iperfMulti(float(period), port)
+        else:
+            error('invalid number of args: iperfMulti period port\n' +
+                   'examples: 120 5001\n')
+
     def do_iperfudp( self, line ):
         """Simple iperf UDP test between two (optionally specified) hosts.
            Usage: iperfudp bw node1 node2"""

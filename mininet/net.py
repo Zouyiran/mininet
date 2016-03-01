@@ -660,7 +660,7 @@ class Mininet( object ):
         rttdev = float( m.group( 4 ) )
         return sent, received, rttmin, rttavg, rttmax, rttdev
 
-    def pingFull( self, hosts=None, timeout=None ):
+    def pingFull( self, hosts=None, timeout=None, count=1):
         """Ping between all specified hosts and return all data.
            hosts: list of hosts
            timeout: time to wait for a response, as string
@@ -678,7 +678,7 @@ class Mininet( object ):
                     opts = ''
                     if timeout:
                         opts = '-W %s' % timeout
-                    result = node.cmd( 'ping -c1 %s %s' % (opts, dest.IP()) )
+                    result = node.cmd( 'ping -c %d %s %s' % (count, opts, dest.IP()) )
                     outputs = self._parsePingFull( result )
                     sent, received, rttmin, rttavg, rttmax, rttdev = outputs
                     all_outputs.append( (node, dest, outputs) )
@@ -781,6 +781,37 @@ class Mininet( object ):
             result.insert( 0, udpBw )
         output( '*** Results: %s\n' % result )
         return result
+
+    def iperfSingleTCP(self, hosts=None, period=60, port=5001):
+        if not hosts:
+            return
+        else:
+            assert len(hosts) == 2
+        client, server = hosts
+        filename = client.name[1:] + '.out'
+        output( '*** Iperf: testing bandwidth between ' )
+        output( "%s and %s\n" % ( client.name, server.name ) )
+        iperfArgs = 'iperf'
+        print "***start server***"
+        server.cmd(iperfArgs+' -s '+' -p '+str(port)+' -i 1 '+' > /home/zouyiran/bs/'+filename+'&')
+        print "***start client***"
+        client.cmd(iperfArgs+' -c '+server.IP()+' -p '+str(port)+' -t '+str(period)+' > /home/zouyiran/bs/'+'client'+filename+'&')
+
+    def iperfMulti(self, period=60, base_port=5001):
+        server_list = []
+        host_list = self.hosts
+        _len = len(host_list)
+        for i in range(0, _len):
+            client = host_list[i]
+            server = client
+            while server == client:
+                server = random.choice(host_list)
+            server_list.append(server)
+            self.iperfSingleTCP(hosts=[client, server], period=period, port=base_port)
+            sleep(.05)
+            base_port += 1
+        sleep(period)
+        print "test has done"
 
     def runCpuLimitTest( self, cpu, duration=5 ):
         """run CPU limit test with 'while true' processes.

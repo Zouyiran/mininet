@@ -95,7 +95,8 @@ TESTS = [ 'cli', 'build', 'pingall', 'pingpair', 'iperf', 'all', 'iperfudp',
 ALTSPELLING = { 'pingall': 'pingAll',
                 'pingpair': 'pingPair',
                 'iperfudp': 'iperfUdp',
-                'iperfUDP': 'iperfUdp' }
+                'iperfUDP': 'iperfUdp',
+                'iperfmulti':'iperfMulti'}
 
 
 def addDictOption( opts, choicesDict, default, name, **kwargs ):
