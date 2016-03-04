@@ -781,23 +781,30 @@ class Mininet( object ):
             result.insert( 0, udpBw )
         output( '*** Results: %s\n' % result )
         return result
-
-    def iperfSingleTCP(self, hosts=None, period=60, port=5001):
+    #------------------------------------------------------------------------
+    def iperfSingleTCP(self, hosts=None, period=10, port=5001):
         if not hosts:
             return
         else:
             assert len(hosts) == 2
         client, server = hosts
-        filename = client.name[1:] + '.out'
+        filename = client.name + '.out'
         output( '*** Iperf: testing bandwidth between ' )
         output( "%s and %s\n" % ( client.name, server.name ) )
         iperfArgs = 'iperf'
         print "***start server***"
-        server.cmd(iperfArgs+' -s '+' -p '+str(port)+' -i 1 '+' > /home/zouyiran/bs/'+filename+'&')
+        server.cmd(iperfArgs+' -s '+' -p '+str(port)+' -i 1 '+' > /home/zouyiran/bs/'+'sever_'+filename+'&')
         print "***start client***"
-        client.cmd(iperfArgs+' -c '+server.IP()+' -p '+str(port)+' -t '+str(period)+' > /home/zouyiran/bs/'+'client'+filename+'&')
+        client.cmd(iperfArgs+' -c '+server.IP()+' -p '+str(port)+' -t '+str(period)+' > /home/zouyiran/bs/'+'client_'+filename+'&')
 
-    def iperfMulti(self, period=60, base_port=5001):
+    def iperfMulti(self, period=10, base_port=5001):
+        '''
+        all hosts: each host --random--send--tcp--to-->  other host
+        Args:
+            period: time in seconds to transmit for
+            base_port: base server port and each++
+        Returns:
+        '''
         server_list = []
         host_list = self.hosts
         _len = len(host_list)
@@ -808,10 +815,51 @@ class Mininet( object ):
                 server = random.choice(host_list)
             server_list.append(server)
             self.iperfSingleTCP(hosts=[client, server], period=period, port=base_port)
-            sleep(.05)
+            # sleep(.05)
+            base_port += 1
+        sleep(period)
+        print "iperfMulti test has done"
+
+    def random_pick( self, _list, probabilities):
+        x = random.uniform(0,1)
+        p = None
+        cumulative_probability = 0.0
+        for item, item_probability in zip(_list, probabilities):
+            cumulative_probability += item_probability
+            p = item
+            if x < cumulative_probability:
+                break
+        return p
+
+    def iperfPb (self, period=10, i=1, j=4, k=64, pt=0.5, pa=0.3):
+        '''
+        all hosts:each host --pt,pa,pc probability--send--tcp--to--> m+i, m+j, m+k host
+        Args:
+            period:
+            i:
+            j:
+            k:
+            pt:
+            pa:
+        Returns:
+        '''
+        base_port = 5001
+        server_list = []
+        host_list = [h for h in self.hosts]
+        pc = 1 - pt - pa
+        p_list = [pt,pa,pc]
+        _len = len(self.hosts)
+        for key in range(_len):
+            client = host_list[key]
+            access_host = [host_list[(key+i)%_len],host_list[(key+j)%_len],host_list[(key+k)%_len]]
+            server = self.random_pick(access_host,p_list)
+            server_list.append(server)
+            self.iperfSingleTCP(hosts = [client, server], period=period, port=base_port)
+            # sleep(.05)
             base_port += 1
         sleep(period)
         print "test has done"
+    #------------------------------------------------------------------------
 
     def runCpuLimitTest( self, cpu, duration=5 ):
         """run CPU limit test with 'while true' processes.
