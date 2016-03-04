@@ -788,12 +788,12 @@ class Mininet( object ):
         else:
             assert len(hosts) == 2
         client, server = hosts
-        filename = client.name + '.out'
+        filename = client.name[1:] + '.out'
         output( '*** Iperf: testing bandwidth between ' )
         output( "%s and %s\n" % ( client.name, server.name ) )
         iperfArgs = 'iperf'
         print "***start server***"
-        server.cmd(iperfArgs+' -s '+' -p '+str(port)+' -i 1 '+' > /home/zouyiran/bs/'+'sever_'+filename+'&')
+        server.cmd(iperfArgs+' -s '+' -p '+str(port)+' -i 1 '+' > /home/zouyiran/bs/'+'server_'+filename+'&')
         print "***start client***"
         client.cmd(iperfArgs+' -c '+server.IP()+' -p '+str(port)+' -t '+str(period)+' > /home/zouyiran/bs/'+'client_'+filename+'&')
 
