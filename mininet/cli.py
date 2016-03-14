@@ -229,7 +229,21 @@ class CLI( Cmd ):
             error( 'invalid number of args: iperf src dst\n' )
 
     #----------------------------------------------------------
-    def do_iperfMulti(self, line ):
+    def do_iperfH2H(self, line):
+        args = line.split()
+        if not args:
+            self.mn.iperfH2H()
+        elif len(args) == 1:
+            period = int(args[0])
+            self.mn.iperfH2H(period)
+        elif len(args) == 2:
+            period = int(args[0])
+            port = int(args[1])
+            self.mn.iperfH2H(period, port)
+        else:
+            error( 'invalid number of args: iperfH2H src dst\n' )
+
+    def do_iperfMulti(self, line):
         """Multi iperf TCP test between nodes"""
         args = line.split()
         if len(args) == 0:

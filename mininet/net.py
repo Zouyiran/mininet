@@ -781,21 +781,39 @@ class Mininet( object ):
             result.insert( 0, udpBw )
         output( '*** Results: %s\n' % result )
         return result
-    #------------------------------------------------------------------------
+
+
+#-----------------------------add this-------------------------------------------
     def iperfSingleTCP(self, hosts=None, period=10, port=5001):
         if not hosts:
             return
         else:
             assert len(hosts) == 2
         client, server = hosts
-        filename = client.name[1:] + '.out'
+        switch_num = len(self.switches)
         output( '*** Iperf: testing bandwidth between ' )
         output( "%s and %s\n" % ( client.name, server.name ) )
         iperfArgs = 'iperf'
         print "***start server***"
-        server.cmd(iperfArgs+' -s '+' -p '+str(port)+' -i 1 '+' > /home/zouyiran/bs/'+'server_'+filename+'&')
+        server.cmd(iperfArgs+' -s '+' -p '+str(port)+' -i 1 '+
+                   ' > /home/zouyiran/bs/'+str(switch_num)+'_'+'server_'+server.name+'_'+str(port)+'.out'+'&')
         print "***start client***"
-        client.cmd(iperfArgs+' -c '+server.IP()+' -p '+str(port)+' -t '+str(period)+' > /home/zouyiran/bs/'+'client_'+filename+'&')
+        client.cmd(iperfArgs+' -c '+server.IP()+' -p '+str(port)+' -t '+str(period)+
+                   ' > /home/zouyiran/bs/'+str(switch_num)+'_'+'client_'+client.name+'_'+str(port)+'.out'+'&')
+
+    def iperfH2H(self, period=5, base_port=5001):
+        '''
+        all hosts: each host --random--send--tcp--to-->  other host
+        Args:
+            period: time in seconds to transmit for
+            base_port: base server port and each++
+        Returns:
+        '''
+        client = self.hosts[0]
+        server = self.hosts[-1]
+        self.iperfSingleTCP(hosts=[client, server], period=period, port=base_port)
+        sleep(period+1)
+        print "iperfH2H test has done"
 
     def iperfMulti(self, period=10, base_port=5001):
         '''
@@ -819,6 +837,9 @@ class Mininet( object ):
             base_port += 1
         sleep(period)
         print "iperfMulti test has done"
+#------------------------------------------------------------------------
+
+
 
     def random_pick( self, _list, probabilities):
         x = random.uniform(0,1)
