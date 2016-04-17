@@ -33,6 +33,7 @@ import sys
 import time
 import os
 import atexit
+import random
 
 from mininet.log import info, output, error
 from mininet.term import makeTerms, runX11
@@ -229,37 +230,60 @@ class CLI( Cmd ):
             error( 'invalid number of args: iperf src dst\n' )
 
     #----------------------------------------------------------
-    def do_iperfH2H(self, line):
+    def do_iperfH2H(self, line): # h1=0 ,h2=1, base_port=5001, protocol=1, period=10
         args = line.split()
         if not args:
             self.mn.iperfH2H()
-        elif len(args) == 1:
-            period = int(args[0])
-            self.mn.iperfH2H(period)
         elif len(args) == 2:
-            period = int(args[0])
-            port = int(args[1])
-            self.mn.iperfH2H(period, port)
+            client = int(args[0])
+            server = int(args[1])
+            self.mn.iperfH2H(client, server)
+        elif len(args) == 3:
+            client = int(args[0])
+            server = int(args[1])
+            base_port = int(args[2])
+            self.mn.iperfH2H(client, server, base_port)
+        elif len(args) == 4:
+            client = int(args[0])
+            server = int(args[1])
+            base_port = int(args[2])
+            protocol = int(args[3])
+            self.mn.iperfH2H(client, server, base_port,protocol)
+        elif len(args) == 5:
+            client = int(args[0])
+            server = int(args[1])
+            base_port = int(args[2])
+            protocol = int(args[3])
+            period = float(args[4])
+            self.mn.iperfH2H(client, server, base_port,protocol,period)
         else:
-            error( 'invalid number of args: iperfH2H src dst\n' )
+            error( 'iperfH2H, invalid number of args:(\n' )
 
-    def do_iperfMulti(self, line):
+    def do_iperfH2HN(self,line):
+        b = random.randint(5,10)
+        self.mn.iperfH2HN(bytes=str(b)+'K')
+
+    def do_iperfMulti(self, line): # base_port=5001, protocol=1, period=1
         """Multi iperf TCP test between nodes"""
         args = line.split()
         if len(args) == 0:
              self.mn.iperfMulti()
         elif len(args) == 1:
-            period = args[ 0 ]
-            self.mn.iperfMulti(period)
+            base_port = int(args[0])
+            self.mn.iperfMulti(base_port)
         elif len(args) == 2:
-            period= args[ 0 ]
-            port = args[ 1 ]
-            self.mn.iperfMulti(float(period), port)
+            base_port = int(args[0])
+            protocol = int(args[1])
+            self.mn.iperfMulti(base_port, protocol)
+        elif len(args) == 3:
+            base_port = int(args[0])
+            protocol = int(args[1])
+            period = float(args[2])
+            self.mn.iperfMulti(base_port, protocol, period)
         else:
-            error('invalid number of args: iperfMulti period port\n' +
-                   'examples: 120 5001\n')
+            error('iperfMulti, invalid number of args:(\n')
 
-    def do_iperfpb(self, line):
+    def do_iperfPb(self, line):
         args = line.split()
         if len(args) == 0:
             self.mn.iperfPb()
