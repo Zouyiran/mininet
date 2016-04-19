@@ -106,6 +106,7 @@ from mininet.util import ( quietRun, fixLimits, numCores, ensureRoot,
                            macColonHex, ipStr, ipParse, netParse, ipAdd,
                            waitListening )
 from mininet.term import cleanUpScreens, makeTerms
+from scipy.stats import poisson, bernoulli, pareto, weibull_max, weibull_min
 
 # Mininet version: should be consistent with README and LICENSE
 VERSION = "2.2.1"
@@ -784,7 +785,7 @@ class Mininet( object ):
 
 
 #-----------------------------add this-------------------------------------------
-    def _iperfSingleUDP(self, hosts=None, bw='10M', flag = True, period = 10.0, port=5001, bytes='10K'):
+    def _iperfSingleUDP(self, hosts=None, period=5.0, port=5001):
         if not hosts:
             return
         else:
@@ -795,23 +796,15 @@ class Mininet( object ):
 
         file_dir = '/home/zouyiran/bs/myself/iperf_data/'
         iperf_udp = 'iperf -u '
-        iperf_bw = '-b ' + bw + ' '
-        if flag: # period
-            print "***start server***"
-            server.cmd(iperf_udp+' -s '+' -p '+str(port)+' -i 0.05 '+
-                       ' > '+file_dir+'_UDP_'+'server_'+server.name+'_'+str(port)+'.out'+'&')
-            print "***start client***"
-            client.cmd(iperf_udp+iperf_bw+' -c '+server.IP()+' -p '+str(port)+' -t '+str(period)+
-                       ' > '+file_dir+'_UDP_'+'client_'+client.name+'_server_'+server.name+'_'+str(port)+'.out'+'&')
-        else: # bytes
-            print "***start server***"
-            server.cmd(iperf_udp+' -s '+' -p '+str(port)+' -i 0.05 '+
-                       ' > '+file_dir+'_UDP_'+'server_'+server.name+'_'+str(port)+'.out'+'&')
-            print "***start client***"
-            client.cmd(iperf_udp+iperf_bw+' -c '+server.IP()+' -p '+str(port)+' -n '+bytes+
-                       ' > '+file_dir+'_UDP_'+'client_'+client.name+'_server_'+server.name+'_'+str(port)+'.out'+'&')
+        # iperf_bw = '-b ' + bw + ' '
+        print "***start server***"
+        server.cmd(iperf_udp+' -s '+' -p '+str(port)+' -i 0.5 '+
+                   ' >> '+file_dir+'_UDP_'+'server_'+server.name+'_'+str(port)+'.out'+'&')
+        print "***start client***"
+        client.cmd(iperf_udp+' -c '+server.IP()+' -p '+str(port)+' -t '+str(period)+
+                   ' >> '+file_dir+'_UDP_'+'client_'+client.name+'_server_'+server.name+'_'+str(port)+'.out'+'&')
 
-    def _iperfSingleTCP(self, hosts=None,  bw='10M', period=10.0, port=5001):
+    def _iperfSingleTCP(self, hosts=None, period=5.0, port=5001):
         if not hosts:
             return
         else:
@@ -819,36 +812,14 @@ class Mininet( object ):
         client, server = hosts
         output( '*** Iperf TCP: testing bandwidth between ' )
         output( "%s --> %s\n" % ( client.name, server.name ) )
-
         file_dir = '/home/zouyiran/bs/myself/iperf_data/'
         iperf_tcp = 'iperf '
-        iperf_bw = '-b ' + bw + ' '
-
         print "***start server***"
-        server.cmd(iperf_tcp+' -s '+' -p '+str(port)+' -i 0.05 '+
-                   ' > '+file_dir+"_TCP_"+'server_'+server.name+'_'+str(port)+'.out'+'&')
+        server.cmd(iperf_tcp+' -s '+' -p '+str(port)+' -i 0.5 '+
+                   ' >> '+file_dir+"TCP_"+'server'+'.out'+'&')
         print "***start client***"
         client.cmd(iperf_tcp+' -c '+server.IP()+' -p '+str(port)+' -t '+str(period)+
-                   ' > '+file_dir+"_TCP_"+'client_'+client.name+'_server_'+server.name+'_'+str(port)+'.out'+'&')
-
-    def iperfH2H(self, h1=0 ,h2=1, base_port=5001, protocol=1, period=5):
-        '''
-        h1 --> h2 send 1K
-        args:
-        h1: a specific host
-        h2: another specific host
-        base_port: server listening port
-        protocol: 1 -> TCP, 0 -> UDP
-        period: test time
-        '''
-        client = self.hosts[h1]
-        server = self.hosts[h2]
-        if protocol == 1:
-            self._iperfSingleTCP(hosts=[client, server], period=period, port=base_port)
-        else:
-            self._iperfSingleUDP(hosts=[client, server], period=period, port=base_port)
-        sleep(5)
-        print "iperfH2H test has done"
+                   ' >> '+file_dir+"TCP_"+'client'+'.out'+'&')
 
     def _iperfSingleTCPN(self, hosts=None, bytes='10K', port=5001):
         if not hosts:
@@ -856,29 +827,60 @@ class Mininet( object ):
         else:
             assert len(hosts) == 2
         client, server = hosts
-        output( '*** Iperf TCP: testing bandwidth between ' )
+        output( '*** Iperf TCP N: testing bandwidth between ' )
         output( "%s --> %s\n" % ( client.name, server.name ) )
-
         file_dir = '/home/zouyiran/bs/myself/iperf_data/'
         iperf_tcp = 'iperf '
-
         print "***start server***"
-        server.cmd(iperf_tcp+' -s '+' -p '+str(port)+' -i 0.05 '+
-                   ' >> '+file_dir+"_TCPN_"+'server'+'.out'+'&')
+        server.cmd(iperf_tcp+' -s '+' -p '+str(port)+' -i 0.5 '+
+                   ' >> '+file_dir+"TCPN_"+'server'+'.out'+'&')
         print "***start client***"
         client.cmd(iperf_tcp+' -c '+server.IP()+' -p '+str(port)+' -n '+bytes+
-                   ' >> '+file_dir+"_TCPN_"+'client'+'.out'+'&')
-    def iperfH2HN(self, h1=0 ,h2=1, base_port=5001, protocol=1, period=5, bytes='10K'):
+                   ' >> '+file_dir+"TCPN_"+'client'+'.out'+'&')
+
+    def _iperfSingleUDPN(self, hosts=None, bytes='10K', port=5001):
+        if not hosts:
+            return
+        else:
+            assert len(hosts) == 2
+        client, server = hosts
+        output( '*** Iperf UDP N: testing bandwidth between ' )
+        output( "%s --> %s\n" % ( client.name, server.name ) )
+        file_dir = '/home/zouyiran/bs/myself/iperf_data/'
+        iperf_udp = 'iperf -u '
+        print "***start server***"
+        server.cmd(iperf_udp+' -s '+' -p '+str(port)+' -i 0.5 '+
+                   ' >> '+file_dir+"UDPN_"+'server'+'.out'+'&')
+        print "***start client***"
+        client.cmd(iperf_udp+' -c '+server.IP()+' -p '+str(port)+' -n '+bytes+
+                   ' >> '+file_dir+"UDPN_"+'client'+'.out'+'&')
+
+    def iperfH2H(self, h1=0, h2=1, base_port=5001, protocol=1, period=5):
+        '''
+        send time
+        '''
+        client = self.hosts[h1]
+        server = self.hosts[h2]
+        if protocol == 1:
+            self._iperfSingleTCP(hosts=[client, server], period=period, port=base_port)
+        else:
+            self._iperfSingleUDP(hosts=[client, server], period=period, port=base_port)
+        sleep(period)
+        print "iperfH2H test has done"
+
+    def iperfH2HN(self, h1=0 ,h2=1, base_port=5001, protocol=1, bytes='10K', num=100):
+        '''
+        send bytes for num
+        '''
         client = self.hosts[h1]
         server = self.hosts[h2]
         count = 0
-        while count < 50:
+        while count < num:
             self._iperfSingleTCPN(hosts=[client, server], bytes=bytes, port=base_port)
             sleep(0.1)
             count += 1
             base_port += 1
-        sleep(5)
-        print "iperfH2HN test has done"
+        print "iperfH2H N test has done"
 
     def iperfMulti(self, base_port=5001, protocol=1, period=0.5):
         '''
@@ -895,50 +897,52 @@ class Mininet( object ):
                 self._iperfSingleTCP(hosts=[client, server], period=period, port=base_port)
             else:
                 self._iperfSingleUDP(hosts=[client, server], period=period, port=base_port)
-            print 'client:', client, '-->' 'server:', server, ' DONE'
-            base_port += 1
-        sleep(1)
-        print "iperfMulti test has done"
-
-    def iperfPb (self, period=10, i=1, j=4, k=64, pt=0.5, pa=0.3):
-        '''
-        all hosts:each host --pt,pa,pc probability--send--tcp--to--> m+i, m+j, m+k host
-        Args:
-            period:
-            i:
-            j:
-            k:
-            pt:
-            pa:
-        Returns:
-        '''
-        base_port = 5001
-        server_list = []
-        host_list = [h for h in self.hosts]
-        pc = 1 - pt - pa
-        p_list = [pt,pa,pc]
-        _len = len(self.hosts)
-        for key in range(_len):
-            client = host_list[key]
-            access_host = [host_list[(key+i)%_len],host_list[(key+j)%_len],host_list[(key+k)%_len]]
-            server = self.random_pick(access_host,p_list)
-            server_list.append(server)
-            self._iperfSingleUDP(hosts = [client, server], bw='10M', period=period, port=base_port)
-            # sleep(.05)
+            print 'client:', client, '-->' 'server:', server
             base_port += 1
         sleep(period)
-        print "test has done"
+        print "iperfMulti test has done"
 
-    def random_pick( self, _list, probabilities):
-        x = random.uniform(0,1)
-        p = None
-        cumulative_probability = 0.0
-        for item, item_probability in zip(_list, probabilities):
-            cumulative_probability += item_probability
-            p = item
-            if x < cumulative_probability:
-                break
-        return p
+    def iperfFM(self, poisson_mean=100, base_port=5001,r_int=0.5, r_tcp=0.8, last_time=1.7, t_threshold=8, size_1=4, size_2=1):
+        '''
+        use iperf to generate flow model
+        Args:
+            poisson_mean:
+
+        Returns:
+
+        '''
+        generate_flows = poisson.rvs(poisson_mean,size=60)
+        for n in range(len(generate_flows)):
+            flows_num = generate_flows[n]
+            for i in flows_num:
+                is_interior = True if bernoulli.rvs(r_int,size=1)[0]==1 else False
+                client = random.choice(self.hosts)
+                server = client
+                if not is_interior:
+                    while server == client:
+                        server = random.choice(self.hosts)
+                is_tcp =  True if bernoulli.rvs(r_tcp,size=1)[0]==1 else False
+                flow_t = pareto.rvs(b=last_time,scale=1,size=1)[0] # b: shape parameter
+                if flow_t < t_threshold:
+                    flow_s = weibull_min.rvs(c=size_1,scale=5,size=1)[0] # c: shape parameter
+                else:
+                    flow_s = weibull_min.rvs(c=size_2,scale=1,size=1)[0]
+                if is_tcp:
+                    # self._iperfSingleTCP(hosts=[client,server], )
+                    if flow_t < t_threshold:
+                        self._iperfSingleTCPN(hosts=[client,server],bytes=str(flow_s)+'K',port=base_port) # hosts=None, bytes='10K', port=5001
+                    else:
+                        self._iperfSingleTCPN(hosts=[client,server],bytes=str(flow_s)+'M',port=base_port)
+
+                else:
+                    # self._iperfSingleUDP(hosts=[client,server],)
+                    if flow_t < t_threshold:
+                        self._iperfSingleUDPN(hosts=[client,server],bytes=str(flow_s)+'K',port=base_port)
+                    else:
+                        self._iperfSingleUDPN(hosts=[client,server],bytes=str(flow_s)+'M',port=base_port)
+                base_port += 1
+                sleep(1)
+        print 'iperfFM test has done'
 #------------------------------------------------------------------------
 
 

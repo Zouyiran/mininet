@@ -261,6 +261,7 @@ class CLI( Cmd ):
 
     def do_iperfH2HN(self,line):
         b = random.randint(5,10)
+        # self.mn.iperfH2HN()
         self.mn.iperfH2HN(bytes=str(b)+'K')
 
     def do_iperfMulti(self, line): # base_port=5001, protocol=1, period=1
