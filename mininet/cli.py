@@ -230,7 +230,7 @@ class CLI( Cmd ):
             error( 'invalid number of args: iperf src dst\n' )
 
     #----------------------------------------------------------
-    def do_iperfH2H(self, line): # h1=0 ,h2=1, base_port=5001, protocol=1, period=10
+    def do_iperfH2H(self, line): #  h1=0, h2=1, base_port=5001, protocol=1, period=5
         args = line.split()
         if not args:
             self.mn.iperfH2H()
@@ -238,17 +238,6 @@ class CLI( Cmd ):
             client = int(args[0])
             server = int(args[1])
             self.mn.iperfH2H(client, server)
-        elif len(args) == 3:
-            client = int(args[0])
-            server = int(args[1])
-            base_port = int(args[2])
-            self.mn.iperfH2H(client, server, base_port)
-        elif len(args) == 4:
-            client = int(args[0])
-            server = int(args[1])
-            base_port = int(args[2])
-            protocol = int(args[3])
-            self.mn.iperfH2H(client, server, base_port,protocol)
         elif len(args) == 5:
             client = int(args[0])
             server = int(args[1])
@@ -259,23 +248,29 @@ class CLI( Cmd ):
         else:
             error( 'iperfH2H, invalid number of args:(\n' )
 
-    def do_iperfH2HN(self,line):
-        b = random.randint(5,10)
-        # self.mn.iperfH2HN()
-        self.mn.iperfH2HN(bytes=str(b)+'K')
+    def do_iperfH2HN(self,line): # h1=0 ,h2=1, base_port=5001, protocol=1, bytes='10K', num=100
+        args = line.split()
+        if not args:
+            self.mn.iperfH2H()
+        elif len(args) == 2:
+            client = int(args[0])
+            server = int(args[1])
+            self.mn.iperfH2HN(client, server)
+        elif len(args) == 6:
+            client = int(args[0])
+            server = int(args[1])
+            base_port = int(args[2])
+            protocol = int(args[3])
+            bytes = str(args[4])
+            num = int(args[5])
+            self.mn.iperfH2H(client, server, base_port,protocol,bytes,num)
+        else:
+            error( 'iperfH2HN, invalid number of args:(\n' )
 
-    def do_iperfMulti(self, line): # base_port=5001, protocol=1, period=1
-        """Multi iperf TCP test between nodes"""
+    def do_iperfMulti(self, line): # base_port=5001, protocol=1, period=0.5
         args = line.split()
         if len(args) == 0:
              self.mn.iperfMulti()
-        elif len(args) == 1:
-            base_port = int(args[0])
-            self.mn.iperfMulti(base_port)
-        elif len(args) == 2:
-            base_port = int(args[0])
-            protocol = int(args[1])
-            self.mn.iperfMulti(base_port, protocol)
         elif len(args) == 3:
             base_port = int(args[0])
             protocol = int(args[1])
@@ -284,16 +279,13 @@ class CLI( Cmd ):
         else:
             error('iperfMulti, invalid number of args:(\n')
 
-    def do_iperfPb(self, line):
+    def do_iperfFM(self, line): #  poisson_mean=100,r_int=0.5, r_tcp=0.8, last_time=1.7, t_threshold=8, size_1=4, size_2=1, base_port=5001
         args = line.split()
         if len(args) == 0:
-            self.mn.iperfPb()
-        elif len(args) == 1:
-            period = args[0]
-            self.mn.iperfPb(float(period))
+            self.mn.iperfFM()
         else:
-            error('invalid number of args: iperfmulti udpBw period\n' +
-                   'udpBw examples: 1M 120\n')
+            error('iperfFM, invalid number of args:(\n')
+
     #-------------------------------------------------------------
 
     def do_iperfudp( self, line ):

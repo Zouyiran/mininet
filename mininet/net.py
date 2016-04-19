@@ -902,25 +902,21 @@ class Mininet( object ):
         sleep(period)
         print "iperfMulti test has done"
 
-    def iperfFM(self, poisson_mean=100, base_port=5001,r_int=0.5, r_tcp=0.8, last_time=1.7, t_threshold=8, size_1=4, size_2=1):
+    def iperfFM(self, poisson_mean=100,r_int=0.5, r_tcp=0.8, last_time=1.7, t_threshold=8, size_1=4, size_2=1, base_port=5001):
         '''
         use iperf to generate flow model
-        Args:
-            poisson_mean:
-
-        Returns:
-
         '''
         generate_flows = poisson.rvs(poisson_mean,size=60)
         for n in range(len(generate_flows)):
             flows_num = generate_flows[n]
-            for i in flows_num:
-                is_interior = True if bernoulli.rvs(r_int,size=1)[0]==1 else False
+            print flows_num
+            for i in range(flows_num):
+                # is_interior = True if bernoulli.rvs(r_int,size=1)[0]==1 else False
                 client = random.choice(self.hosts)
                 server = client
-                if not is_interior:
-                    while server == client:
-                        server = random.choice(self.hosts)
+                # if not is_interior:
+                while server == client:
+                    server = random.choice(self.hosts)
                 is_tcp =  True if bernoulli.rvs(r_tcp,size=1)[0]==1 else False
                 flow_t = pareto.rvs(b=last_time,scale=1,size=1)[0] # b: shape parameter
                 if flow_t < t_threshold:

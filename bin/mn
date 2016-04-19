@@ -96,10 +96,10 @@ ALTSPELLING = { 'pingall': 'pingAll',
                 'pingpair': 'pingPair',
                 'iperfudp': 'iperfUdp',
                 'iperfUDP': 'iperfUdp',
-                'iperfmulti':'iperfMulti',
-                'iperfpb':'iperfPb',
                 'iperfh2h':'iperfH2H',
-                'iperfh2hn':'iperfH2HN'}
+                'iperfh2hn':'iperfH2HN',
+                'iperfmulti':'iperfMulti',
+                'iperffm':'iperfFM'}
 
 
 def addDictOption( opts, choicesDict, default, name, **kwargs ):
