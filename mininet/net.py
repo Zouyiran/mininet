@@ -906,13 +906,13 @@ class Mininet( object ):
         '''
         use iperf to generate flow model
         '''
-        generate_flows = poisson.rvs(poisson_mean,size=60)
+        generate_flows = poisson.rvs(poisson_mean,size=30)
         for n in range(len(generate_flows)):
             flows_num = generate_flows[n]
             print flows_num
             for i in range(flows_num):
                 # is_interior = True if bernoulli.rvs(r_int,size=1)[0]==1 else False
-                client = random.choice(self.hosts)
+                client = random.choice(self.hosts[0:5])
                 server = client
                 # if not is_interior:
                 while server == client:
@@ -936,8 +936,8 @@ class Mininet( object ):
                         self._iperfSingleUDPN(hosts=[client,server],bytes=str(flow_s)+'K',port=base_port)
                     else:
                         self._iperfSingleUDPN(hosts=[client,server],bytes=str(flow_s)+'M',port=base_port)
-                base_port += 1
-                sleep(1)
+                base_port = random.randint(base_port,base_port+500)
+                sleep(0.1)
         print 'iperfFM test has done'
 #------------------------------------------------------------------------
 
